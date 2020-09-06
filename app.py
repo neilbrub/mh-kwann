@@ -67,7 +67,7 @@ def build_header():
                             "Overview", style={"margin-top": "0px"}
                         ),
                     ],
-                    className="one column",
+                    className="three column",
                     id="title",
                 ),
             ],
@@ -79,35 +79,6 @@ def build_header():
 # Builds the layout and components for the inputs to filter the data, as well as the overdoses/month graph and the overdose map
 def build_filtering():
     return html.Div([
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.H3(id="overdoses_text"),
-                        html.P(id="overdoses-ratio")
-                    ],
-                    id="info-container",
-                    className="mini_container three columns",
-                    style={"text-align": "center"},
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                 html.H6(id="description"),
-                                 html.P(id="description-1"),
-                                 html.P(id="description-2"),
-                            ],
-                            id="description_div",
-                        ),
-                    ],
-                    id="description-container",
-                    className="container-display mini_container nine columns",
-                ),
-            ],
-            className="row flex-display twelve columns"
-        ),
-
         html.Div(
             [
                 html.H3(
@@ -218,8 +189,38 @@ def build_filtering():
                     ],
                     id="left-column-1",
                     style={"flex-grow": 1},
-                    className="",
+                    className="nine columns",
                 ),
+                html.Div(
+                            [
+                                html.H3(
+                                    children="Number of Overdoses"
+                                    ),
+                                html.Div(
+                                    [
+                                        html.H3(id="overdoses_text"),
+                                        html.P(id="overdoses-ratio")
+                                    ],
+                                    # id="info-container",
+                                    className="mini_container",
+                                    style={"text-align": "center"},
+                                ),
+                                html.H3(
+                                    children="Naloxone administered cases",
+                                    ),
+                                html.Div(
+                                    [
+                                        html.H3(id="naloxone_text", children="121"),
+                                    ],
+                                    className="mini_container",
+                                    style={"text-align": "center"},
+                                ),
+                                
+                                
+                            ],
+
+                            className="three columns"
+                        ),
                 html.Div(
                     [
                         html.Div(
@@ -258,23 +259,7 @@ def build_filtering():
                                 ]),
                                 html.H5(
                                     "", style={"margin-top": "30px", "margin-bottom": "25px"}
-                                ),
-                                html.Div(
-                                    [
-                                        html.A(
-                                            html.Button(id='download-button-1', n_clicks=0, className="dash_button", style={'padding': '0px 10px'}),
-                                            id='download-link-1',
-                                            # download='rawdata.csv',
-                                            href="",
-                                            target="_blank",
-                                        ),
-                                        html.A(
-                                            html.Button(id='download-button-2',  n_clicks=0, className="dash_button", style={'padding': '0px 10px'}),
-                                            id='download-link-2',
-                                            style={"margin-left": "5px"},
-                                        )
-                                    ],
-                                ),
+                                )
                             ],
                             id="cross-filter-options",
                         ),
@@ -302,7 +287,7 @@ app.layout = html.Div(
                 build_filtering(),
             ],
             id="mainContainer",
-            style={"display": "flex", "flex-direction": "column", "margin": "auto", "width":"75%"},
+            style={"font-family": "sans-serif", "display": "flex", "flex-direction": "column", "margin": "auto", "width":"75%"},
         ),
         html.Div([""], id='gc-footer'),
         html.Div(id='none2', children=[], style={'display': 'none'}), # Placeholder element to trigger translations upon page load
