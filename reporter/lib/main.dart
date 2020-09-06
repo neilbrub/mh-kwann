@@ -28,8 +28,8 @@ class MyApp extends StatelessWidget {
           // or simply save your changes to "hot reload" in a Flutter IDE).
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
-          // primarySwatch: Colors.deepPurple,
-          primaryColor: Color(0xff6200EE)),
+          // primarySwatch: Colors.grey,
+          primaryColor: Color(0xff878787)),
       home: MyHomePage(title: 'Overdose Incident Form'),
     );
   }
@@ -168,43 +168,38 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Text("Was Naloxone administered?",
               style: TextStyle(fontSize: 15.0)),
         ),
-        Column(
-          children: <Widget>[
-            Container(
-                padding: const EdgeInsets.all(0),
-                child: ListTile(
-                  // contentPadding: const EdgeInsets.only(top: 0, bottom: 0),
-                  title: const Text('Yes'),
-                  leading: Radio(
-                    value: true,
-                    activeColor: Color(0xff6200EE),
-                    groupValue: naloxoneAdmin,
-                    onChanged: (bool value) {
-                      setState(() {
-                        naloxoneAdmin = value;
-                      });
-                    },
-                  ),
-                )),
-            Container(
-                padding: const EdgeInsets.all(0),
-                child: ListTile(
-                  title: const Text('No'),
-                  leading: Radio(
-                    value: false,
-                    activeColor: Color(0xff6200EE),
-                    groupValue: naloxoneAdmin,
-                    onChanged: (bool value) {
-                      setState(() {
-                        naloxoneAdmin = value;
-                      });
-                    },
-                  ),
-                )),
-          ],
-        ),
         Container(
-          margin: const EdgeInsets.only(left: 16, right: 16),
+            padding: const EdgeInsets.all(0),
+            child: Row(children: [
+              Radio(
+                value: true,
+                activeColor: Color(0xff6200EE),
+                groupValue: naloxoneAdmin,
+                onChanged: (bool value) {
+                  setState(() {
+                    naloxoneAdmin = value;
+                  });
+                },
+              ),
+              Text("Yes", style: TextStyle(fontSize: 16.0))
+            ])),
+        Container(
+            padding: const EdgeInsets.all(0),
+            child: Row(children: [
+              Radio(
+                value: false,
+                activeColor: Color(0xff6200EE),
+                groupValue: naloxoneAdmin,
+                onChanged: (bool value) {
+                  setState(() {
+                    naloxoneAdmin = value;
+                  });
+                },
+              ),
+              Text("No", style: TextStyle(fontSize: 16.0))
+            ])),
+        Container(
+          margin: const EdgeInsets.only(top: 5, left: 16, right: 16),
           child: Text("Comments", style: TextStyle(fontSize: 15.0)),
         ),
         Container(
