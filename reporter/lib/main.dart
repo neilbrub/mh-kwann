@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'dart:developer';
 import 'dart:async';
 
@@ -58,6 +61,15 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         selectedDate = picked;
       });
+  }
+
+  Future<void> setLocation(LatLng loc) async {
+    final http.Response res = await http.get(
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${loc.latitude},${loc.longitude}&key=AIzaSyAt0uDly9OqciR3hgpDsSzpAX4KCeXkljo');
+    setState(() {
+      selectedLocationString =
+          json.decode(res.body)['results'][0]['formatted_address'].toString();
+    });
   }
 
   @override
@@ -135,8 +147,8 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                   context,
                   new MaterialPageRoute(
-                      builder: (ctxt) =>
-                          new MapsScreen(loc: selectedLocation)));
+                      builder: (ctxt) => new MapsScreen(
+                          loc: selectedLocation, setLocation: setLocation)));
             },
             child: Container(
                 margin: const EdgeInsets.all(10),
@@ -237,10 +249,12 @@ class ACRScreen extends StatelessWidget {
 
 class MapsScreen extends StatelessWidget {
   final LatLng loc;
+  final void Function(LatLng) setLocation;
 
   final Completer<GoogleMapController> _controller = Completer();
 
-  MapsScreen({Key key, @required this.loc}) : super(key: key);
+  MapsScreen({Key key, @required this.loc, @required this.setLocation})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +266,7 @@ class MapsScreen extends StatelessWidget {
         mapType: MapType.hybrid,
         initialCameraPosition: new CameraPosition(target: loc, zoom: 15),
         onTap: (LatLng loc) {
-          log(loc.toString());
+          setLocation(loc);
           Navigator.pop(context);
         },
         onMapCreated: (GoogleMapController controller) {
