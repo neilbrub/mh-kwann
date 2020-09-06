@@ -22,10 +22,26 @@ ReportApp.post('/', (req, res) => {
   res.json({result: `report for ${report.timestamp} added to Firestore.`});
 });
 
+// Get all reports
+FetchApp.get('/', async (req, res) => {
+  const recordsRef = admin.firestore().collection('reports');
+  const snapshot = await recordsRef.get();
 
-FetchApp.get('/', (req, res) => {
-  res.send("Empty get request success");
+  let reportData = []
+  snapshot.forEach(async doc => {
+    let data = doc.data();
+    reportData.push(data.original)
+  });
+
+  res.json({reports: reportData});
 });
+
+// FetchApp.post('/', (req, res) => {
+//   let timeStart = null;
+//   let timeEnd = null;
+//   if (req.body.hasOwnProperty('time_start')) timeStart = req.body['time_start'];
+//   if (req.body.hasOwnProperty('time_end')) timeEnd = req.body['time_end'];
+// })
 
 
 // Export function
