@@ -14,6 +14,15 @@ MedHacks 2020 - Enabling Physicians to improve opioid response plans through agg
 ```
 
 ### Dev Setup
+#### Dashboard Web App (Plotly Dash)
+<i>In client directories (`reporter`)</i><br />
+
+i. The following commands can be done more easily if in a virtual environment (like conda) so it highly recommended to install [Anaconda](https://www.anaconda.com/distribution/) beforehand.<br />
+i (cont). With Anaconda installed, open up the command line and enter: `conda create --name py3 python=3.6` to create a new virtual env and enter `conda activate py3` to start using it.<br />
+ii. Navigate to the correct folder and install the dependencies with the following command: `pip install -r requirements.txt`<br />
+iii. Use the following command to start the app on a local server: `python app.py`<br />
+
+
 #### Frontend (Flutter)
 <i>In client directories (`reporter`)</i><br />
 
