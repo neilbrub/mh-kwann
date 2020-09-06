@@ -1,9 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'dart:developer';
 import 'dart:async';
 
 import 'common/button.dart';
+
+import 'package:camera/camera.dart';
+import 'package:reporter/scan.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -25,9 +32,10 @@ class MyApp extends StatelessWidget {
           // or simply save your changes to "hot reload" in a Flutter IDE).
           // Notice that the counter didn't reset back to zero; the application
           // is not restarted.
-          // primarySwatch: Colors.deepPurple,
-          primaryColor: Color(0xff6200EE)),
+          // primarySwatch: Colors.grey,
+          primaryColor: Color(0xff878787)),
       home: MyHomePage(title: 'Overdose Incident Form'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -43,9 +51,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   DateTime selectedDate = DateTime.now();
-  String selectedLocation = "";
+  String selectedLocationString = "";
+  LatLng selectedLocation = new LatLng(43.4643, -80.5204);
   String comment = "";
   bool naloxoneAdmin;
+  final commentController = TextEditingController();
+
+  CameraDescription firstCamera;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -57,6 +69,28 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         selectedDate = picked;
       });
+  }
+
+  Future<void> setLocation(LatLng loc) async {
+    final http.Response res = await http.get(
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${loc.latitude},${loc.longitude}&key=AIzaSyAt0uDly9OqciR3hgpDsSzpAX4KCeXkljo');
+    setState(() {
+      selectedLocationString =
+          json.decode(res.body)['results'][0]['formatted_address'].toString();
+    });
+  }
+
+  Future<void> _getCamera(BuildContext context) async {
+    final cameras = await availableCameras();
+    setState(() {
+      firstCamera = cameras.first;
+    });
+  }
+
+  @override
+  dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -92,8 +126,22 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           margin: const EdgeInsets.only(left: 16, right: 16),
           child: Button(
-            callback: () => Navigator.push(context,
-                new MaterialPageRoute(builder: (ctxt) => new ACRScreen())),
+            callback:() {
+              _getCamera(context);
+              Navigator.push(
+                context,
+                new MaterialPageRoute(builder: (ctxt) => new TakePictureScreen(
+                  camera: firstCamera,
+                  updateForm: (nalxUsed, remark) {
+                    commentController.text = remark;
+                    setState(() {
+                      // comment = remark;
+                      naloxoneAdmin = nalxUsed;
+                    });
+                  }
+                ))
+              );
+            },
             title: "Scan ACR Report",
           ),
         ),
@@ -131,8 +179,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         GestureDetector(
             onTap: () {
-              Navigator.push(context,
-                  new MaterialPageRoute(builder: (ctxt) => new MapsScreen()));
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (ctxt) => new MapsScreen(
+                          loc: selectedLocation, setLocation: setLocation)));
             },
             child: Container(
                 margin: const EdgeInsets.all(10),
@@ -142,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     borderRadius: BorderRadius.all(Radius.circular(5.0))),
                 child: new Center(
                   child: new Text(
-                    selectedLocation,
+                    selectedLocationString,
                     style: TextStyle(fontSize: 18, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
@@ -152,43 +203,38 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Text("Was Naloxone administered?",
               style: TextStyle(fontSize: 15.0)),
         ),
-        Column(
-          children: <Widget>[
-            Container(
-                padding: const EdgeInsets.all(0),
-                child: ListTile(
-                  // contentPadding: const EdgeInsets.only(top: 0, bottom: 0),
-                  title: const Text('Yes'),
-                  leading: Radio(
-                    value: true,
-                    activeColor: Color(0xff6200EE),
-                    groupValue: naloxoneAdmin,
-                    onChanged: (bool value) {
-                      setState(() {
-                        naloxoneAdmin = value;
-                      });
-                    },
-                  ),
-                )),
-            Container(
-                padding: const EdgeInsets.all(0),
-                child: ListTile(
-                  title: const Text('No'),
-                  leading: Radio(
-                    value: false,
-                    activeColor: Color(0xff6200EE),
-                    groupValue: naloxoneAdmin,
-                    onChanged: (bool value) {
-                      setState(() {
-                        naloxoneAdmin = value;
-                      });
-                    },
-                  ),
-                )),
-          ],
-        ),
         Container(
-          margin: const EdgeInsets.only(left: 16, right: 16),
+            padding: const EdgeInsets.all(0),
+            child: Row(children: [
+              Radio(
+                value: true,
+                activeColor: Color(0xff6200EE),
+                groupValue: naloxoneAdmin,
+                onChanged: (bool value) {
+                  setState(() {
+                    naloxoneAdmin = value;
+                  });
+                },
+              ),
+              Text("Yes", style: TextStyle(fontSize: 16.0))
+            ])),
+        Container(
+            padding: const EdgeInsets.all(0),
+            child: Row(children: [
+              Radio(
+                value: false,
+                activeColor: Color(0xff6200EE),
+                groupValue: naloxoneAdmin,
+                onChanged: (bool value) {
+                  setState(() {
+                    naloxoneAdmin = value;
+                  });
+                },
+              ),
+              Text("No", style: TextStyle(fontSize: 16.0))
+            ])),
+        Container(
+          margin: const EdgeInsets.only(top: 5, left: 16, right: 16),
           child: Text("Comments", style: TextStyle(fontSize: 15.0)),
         ),
         Container(
@@ -198,6 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
               border: Border.all(width: 1, color: Colors.grey),
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           child: TextField(
+            controller: commentController,
             decoration: new InputDecoration.collapsed(hintText: ''),
             cursorColor: Color(0xff6200EE),
             onSubmitted: (String value) {
@@ -219,25 +266,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class ACRScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Scan ACR Report"),
-      ),
-      body: new Text("Scan"),
-    );
-  }
-}
 
 class MapsScreen extends StatelessWidget {
-  static final CameraPosition defaultLoc = CameraPosition(
-    target: LatLng(43.4643, -80.5204),
-    zoom: 14.4746,
-  );
+  final LatLng loc;
+  final void Function(LatLng) setLocation;
 
   final Completer<GoogleMapController> _controller = Completer();
+
+  MapsScreen({Key key, @required this.loc, @required this.setLocation})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +284,11 @@ class MapsScreen extends StatelessWidget {
       ),
       body: GoogleMap(
         mapType: MapType.hybrid,
-        initialCameraPosition: defaultLoc,
+        initialCameraPosition: new CameraPosition(target: loc, zoom: 15),
+        onTap: (LatLng loc) {
+          setLocation(loc);
+          Navigator.pop(context);
+        },
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
