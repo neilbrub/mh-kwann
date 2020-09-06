@@ -51,7 +51,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  DateTime selectedDate = DateTime.now();
+  String selectedLocation = "";
+  bool naloxoneAdmin;
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        selectedDate = picked;
+      });
+  }
+
   Completer<GoogleMapController> _controller = Completer();
 
   static final CameraPosition _kGooglePlex = CameraPosition(
@@ -82,13 +97,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding:
+              const EdgeInsets.only(top: 14, right: 16, left: 16, bottom: 14),
           child: Text(
             'Scanning an ACR will allow the app to extract data from the report to automatically fill out the form. ',
             style: TextStyle(fontSize: 16.0),
           ),
         ),
-        Container(
+        Padding(
           padding: const EdgeInsets.all(0),
           child: Button(
             callback: () => log('Scan button pressed'),
@@ -97,36 +113,95 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         Divider(
           color: Colors.grey,
-          height: 40,
+          height: 30,
           thickness: 0.3,
           indent: 10,
           endIndent: 10,
         ),
-        TextField(
-          decoration: InputDecoration(
-              border: InputBorder.none, hintText: 'Date & time of overdose'),
-        ),
-        TextField(
-          decoration: InputDecoration(
-              border: InputBorder.none, hintText: 'Choose a location'),
-        ),
+        Text("Date of overdose", style: TextStyle(fontSize: 15.0)),
+        GestureDetector(
+            onTap: () {
+              _selectDate(context);
+            },
+            child: Container(
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    border: Border.all(width: 1, color: Colors.grey),
+                    borderRadius: BorderRadius.all(Radius.circular(5.0))),
+                child: new Center(
+                  child: new Text(
+                    "${selectedDate.toLocal()}".split(' ')[0],
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    textAlign: TextAlign.center,
+                  ),
+                ))),
+        Text("Location of overdose", style: TextStyle(fontSize: 15.0)),
+        GestureDetector(
+            onTap: () {
+              _selectDate(context);
+            },
+            child: Container(
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    border: Border.all(width: 1, color: Colors.grey),
+                    borderRadius: BorderRadius.all(Radius.circular(5.0))),
+                child: new Center(
+                  child: new Text(
+                    selectedLocation,
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    textAlign: TextAlign.center,
+                  ),
+                ))),
+        // Container(
+        //   height: 150,
+        //   child: GoogleMap(
+        //     mapType: MapType.hybrid,
+        //     initialCameraPosition: _kGooglePlex,
+        //     onMapCreated: (GoogleMapController controller) {
+        //       _controller.complete(controller);
+        //     },
+        //   ),
+        // ),
+
         Container(
-          height: 150,
-          child: GoogleMap(
-            mapType: MapType.hybrid,
-            initialCameraPosition: _kGooglePlex,
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
+          margin: const EdgeInsets.only(top: 0),
+          child: Text("Was Naloxone administered?",
+              style: TextStyle(fontSize: 15.0)),
+        ),
+        ListTile(
+          // contentPadding: const EdgeInsets.only(top: 0, bottom: 0),
+          title: const Text('Yes'),
+          leading: Radio(
+            value: true,
+            groupValue: naloxoneAdmin,
+            onChanged: (bool value) {
+              setState(() {
+                naloxoneAdmin = value;
+              });
             },
           ),
         ),
-        TextField(
-          decoration:
-              InputDecoration(border: InputBorder.none, hintText: 'Comments'),
+        ListTile(
+          // contentPadding: const EdgeInsets.all(0),
+          title: const Text('No'),
+          leading: Radio(
+            value: false,
+            groupValue: naloxoneAdmin,
+            onChanged: (bool value) {
+              setState(() {
+                naloxoneAdmin = value;
+              });
+            },
+          ),
         ),
-        Button(
-          callback: () => log('Submit pressed'),
-          title: "Submit Form",
+        Container(
+          margin: const EdgeInsets.all(16),
+          child: Button(
+            callback: () => log('Submit Form Pressed'),
+            title: "Submit Form",
+          ),
         ),
       ]), // This trailing comma makes auto-formatting nicer for build methods.
     );
