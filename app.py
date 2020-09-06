@@ -16,6 +16,8 @@ import dash_dangerously_set_inner_html
 from dateutil.relativedelta import relativedelta
 from dash.dependencies import Input, Output, State
 
+import urllib.request, json 
+
 # Multi-dropdown options
 
 # get relative data folder
@@ -29,8 +31,32 @@ server = app.server
 
 
 # Load data
-df = pd.read_csv("dummy_opioid_data.csv", header=0, low_memory=False)
+with urllib.request.urlopen("https://us-central1-mh-kwann.cloudfunctions.net/fetch") as url:
+    opioid_data = json.loads(url.read().decode())
+
+df = pd.json_normalize(opioid_data['reports'])
+
+print(df.columns)
+df = df.rename(columns={'location.lat': 'lon', 'location.lng': 'lat'})
+df["id"] = df.index
+print(df.columns)
+
+#df = pd.json_normalize(data['results'])
+#df = pd.read_csv("opioid_data.csv", header=0, low_memory=False)
+print(df['timestamp'])
+df['timestamp'] = df.apply(lambda x: x['timestamp'][12:17] + x['timestamp'][8:12] + x['timestamp'][5:8] + x['timestamp'][18:-4], axis=1) # fixes timestamp
 df['timestamp'] = pd.to_datetime(df['timestamp'])  # converts the timestamp to date_time objects
+
+
+external_stylesheets = ['https://use.fontawesome.com/releases/v5.8.1/css/all.css',
+                        'https://wet-boew.github.io/themes-dist/GCWeb/css/theme.min.css',
+                        'https://wet-boew.github.io/themes-dist/GCWeb/wet-boew/css/noscript.min.css']  # Link to external CSS
+
+external_scripts = [
+    'https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.js',
+    'https://wet-boew.github.io/themes-dist/GCWeb/wet-boew/js/wet-boew.min.js',
+    'https://wet-boew.github.io/themes-dist/GCWeb/js/theme.min.js'
+]
 
 
 # Create global chart template
@@ -49,7 +75,7 @@ layout = dict(
         accesstoken=mapbox_access_token,
         style="light",
         center=dict(lon=-78.05, lat=42.54),
-        zoom=7,
+        zoom=4,
     ),
 )
 
@@ -59,15 +85,12 @@ def build_header():
             [
                 html.Div(
                     [
-                        html.H3(
-                            "Opioid Overdose Map",
-                            style={"margin-bottom": "0px"},
-                        ),
-                        html.H5(
-                            "Overview", style={"margin-top": "0px"}
+                        html.H1(
+                            "Canada Opioid Overdose Dashboard",
+                            style={"margin-top": "20px", "margin-bottom": "0px"},
                         ),
                     ],
-                    className="one column",
+                    className="three column",
                     id="title",
                 ),
             ],
@@ -79,35 +102,6 @@ def build_header():
 # Builds the layout and components for the inputs to filter the data, as well as the overdoses/month graph and the overdose map
 def build_filtering():
     return html.Div([
-        html.Div(
-            [
-                html.Div(
-                    [
-                        html.H3(id="overdoses_text"),
-                        html.P(id="overdoses-ratio")
-                    ],
-                    id="info-container",
-                    className="mini_container three columns",
-                    style={"text-align": "center"},
-                ),
-                html.Div(
-                    [
-                        html.Div(
-                            [
-                                 html.H6(id="description"),
-                                 html.P(id="description-1"),
-                                 html.P(id="description-2"),
-                            ],
-                            id="description_div",
-                        ),
-                    ],
-                    id="description-container",
-                    className="container-display mini_container nine columns",
-                ),
-            ],
-            className="row flex-display twelve columns"
-        ),
-
         html.Div(
             [
                 html.H3(
@@ -132,83 +126,6 @@ def build_filtering():
                                     id="overdoses-text",
                                     className="control_label",
                                 ),
-                                html.Div(
-                                    [
-                                        html.P(
-                                            id="latitude-text",
-                                            className="control_label",
-                                        ),
-                                        # dcc.RangeSlider(
-                                        #     id="lat_slider",
-                                        #     min=-90.0,
-                                        #     max=90.0,
-                                        #     value=[-90.0, 90.0],
-                                        #     className="dcc_control",
-                                        #     marks=lat_dict,
-                                        # ),
-                                        dcc.Input(
-                                            id="lat_min",
-                                            type='number',
-                                            value=-90.0,
-                                            placeholder="Min Latitude",
-                                            min=-90.0,
-                                            max=90.0,
-                                            step=5,
-                                            style={"margin-left": "5px"}
-                                        ),
-                                        dcc.Input(
-                                            id="lat_max",
-                                            type='number',
-                                            value=90.0,
-                                            placeholder="Max Latitude",
-                                            min=-90.0,
-                                            max=90.0,
-                                            step=5,
-                                            style={"margin-left": "5px"}
-                                        ),
-                                        html.H5(
-                                            "", style={"margin-top": "30px"}
-                                        ),
-                                    ],
-                                    className="one-half column"
-                                ),
-                                html.Div(
-                                    [
-                                        html.P(
-                                            id="longitude-text",
-                                            className="control_label",
-                                        ),
-                                        # dcc.RangeSlider(
-                                        #     id="lon_slider",
-                                        #     min=-180.0,
-                                        #     max=180.0,
-                                        #     value=[-180.0, 180.0],
-                                        #     className="dcc_control",
-                                        #     marks=lon_dict,
-                                        # ),
-                                        dcc.Input(
-                                            id="lon_min",
-                                            type='number',
-                                            value=-90.0,
-                                            placeholder="Min Longitude",
-                                            min=-90.0,
-                                            max=90.0,
-                                            step=5,
-                                            style={"margin-left": "5px"}
-                                        ),
-                                        dcc.Input(
-                                            id="lon_max",
-                                            type='number',
-                                            value=90.0,
-                                            placeholder="Max Longitude",
-                                            min=-90.0,
-                                            max=90.0,
-                                            step=5,
-                                            style={"margin-left": "5px"}
-                                        ),
-                                    ],
-                                    className="one-half column"
-                                ),
                                 html.H5(
                                     "", style={"margin-top": "10px"}
                                 ),
@@ -218,37 +135,78 @@ def build_filtering():
                     ],
                     id="left-column-1",
                     style={"flex-grow": 1},
-                    className="",
+                    className="nine columns",
                 ),
+                html.Div(
+                            [
+
+                                html.Div(
+                                    [
+                                        html.H5("Total overdoses"),
+                                        html.H3(id="overdoses_text"),
+                                        html.H5("+22% from last month"),
+                                    ],
+                                    # id="info-container",
+                                    className="mini_container",
+                                    style={"text-align": "center"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.H5("Nalaxone provided"),
+                                        html.H3(id="naloxone_text", children="19221"),
+                                        html.H5("-10% from target"),
+                                    ],
+                                    className="mini_container",
+                                    style={"text-align": "center"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.H5("Fatal cases"),
+                                        html.H3(id="fatal_text", children="9041"),
+                                        html.H5("+6% from last month"),
+                                    ],
+                                    className="mini_container",
+                                    style={"text-align": "center"},
+                                ),
+                            ],
+                            className="three columns"
+                    ),
+            ],
+            className="row",
+        ),
+        html.Div(
+            [
                 html.Div(
                     [
                         html.Div(
                             [dcc.Graph(id="count_graph")],
                             id="countGraphContainer",
                         ),
-                        html.Div(
+                    ],
+                    id="right-column-1",
+                    style={"flex-grow": 1},
+                    className="eight columns pretty_container",
+                ),
+                html.Div(
                             [
-                                html.P(
-                                    id="yearslider-text",
-                                    className="control_label",
+                                html.H2("Filter"),
+                                html.H5("Region"),
+                                html.Label(
+                                    dcc.Input(
+                                        id="input_text",
+                                        type="text",
+                                        placeholder="Kitchener-Waterloo",
+                                    ),
                                 ),
-                                # dcc.RangeSlider(
-                                #     id="year_slider",
-                                #     min=1962,
-                                #     max=1973,
-                                #     value=[1962, 1973],
-                                #     className="dcc_control",
-                                #     marks=year_dict
-                                # ),
+                                html.H5("Date range"),
                                 html.Div([
                                     html.Label(
                                         dcc.DatePickerRange(
                                             id='date_picker_range',
-                                            min_date_allowed=dt.datetime(1962, 9, 29),
-                                            max_date_allowed=dt.datetime(1972, 12, 31),
-                                            #initial_visible_month=dt.datetime(1962, 9, 29),
-                                            start_date=dt.datetime(1962, 9, 29),
-                                            end_date=dt.datetime(1972, 12, 31),
+                                            min_date_allowed=dt.datetime(2019, 1, 1),
+                                            max_date_allowed=dt.datetime(2020, 12, 31),
+                                            start_date=dt.datetime(2019, 1, 1),
+                                            end_date=dt.datetime(2020, 12, 31),
                                             start_date_placeholder_text='Select start date',
                                             end_date_placeholder_text='Select end date',
                                             style={"margin-top": "5px"}
@@ -259,31 +217,13 @@ def build_filtering():
                                 html.H5(
                                     "", style={"margin-top": "30px", "margin-bottom": "25px"}
                                 ),
-                                html.Div(
-                                    [
-                                        html.A(
-                                            html.Button(id='download-button-1', n_clicks=0, className="dash_button", style={'padding': '0px 10px'}),
-                                            id='download-link-1',
-                                            # download='rawdata.csv',
-                                            href="",
-                                            target="_blank",
-                                        ),
-                                        html.A(
-                                            html.Button(id='download-button-2',  n_clicks=0, className="dash_button", style={'padding': '0px 10px'}),
-                                            id='download-link-2',
-                                            style={"margin-left": "5px"},
-                                        )
-                                    ],
-                                ),
                             ],
                             id="cross-filter-options",
-                        ),
-                    ],
-                    id="right-column-1",
-                    style={"flex-grow": 1},
-                    className="six columns",
-                ),
+                            style={"flex-grow": 1},
+                            className="four columns pretty_container",
+                    ),
             ],
+            className="row flex-display",
             style={"justify-content": "space-evenly"}
         ),
     ])
@@ -292,26 +232,22 @@ def build_filtering():
 # Create app layout
 app.layout = html.Div(
     [
-        html.Div([""], id='gc-header'),
         html.Div(
             [
-                dcc.Store(id="aggregate_data"),
                 html.Div(id="output-clientside"),  # empty Div to trigger javascript file for graph resizing
 
                 build_header(),
                 build_filtering(),
             ],
             id="mainContainer",
-            style={"display": "flex", "flex-direction": "column", "margin": "auto", "width":"75%"},
+            style={"font-family": "sans-serif", "display": "flex", "flex-direction": "column", "margin": "auto", "width":"75%"},
         ),
-        html.Div([""], id='gc-footer'),
-        html.Div(id='none2', children=[], style={'display': 'none'}), # Placeholder element to trigger translations upon page load
     ],
 )
 
 
 # Helper functions
-def filter_dataframe(df, start_date_dt, end_date_dt, lat_min, lat_max, lon_min, lon_max):
+def filter_dataframe(df, start_date_dt, end_date_dt):
     """Filter the extracted overdose dataframe on multiple parameters.
 
     Called for every component.
@@ -326,18 +262,6 @@ def filter_dataframe(df, start_date_dt, end_date_dt, lat_min, lat_max, lon_min, 
 
     end_date_dt : datetime object
         Ending date stored as a datetime object
-
-    lat_min : double
-        Minimum value of the latitude stored as a double.
-        
-    lat_max : double
-        Maximum value of the latitude stored as a double.
-        
-    lon_min : double
-        Minimum value of the longitude stored as a double.
-        
-    lon_max : double
-        Maximum value of the longitude stored as a double.
 
     Returns
     -------
@@ -369,14 +293,10 @@ def filter_dataframe(df, start_date_dt, end_date_dt, lat_min, lat_max, lon_min, 
     Output("overdoses_text", "children"),
     [
         Input("date_picker_range", "start_date"),
-        Input("date_picker_range", "end_date"),
-        Input("lat_min", "value"),
-        Input("lat_max", "value"),
-        Input("lon_min", "value"),
-        Input("lon_max", "value"),
+        Input("date_picker_range", "end_date")
     ],
 )
-def update_overdoses_text(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
+def update_overdoses_text(start_date, end_date):
     """Update the component that counts the number of overdoses selected.
 
     Parameters
@@ -386,18 +306,6 @@ def update_overdoses_text(start_date, end_date, lat_min, lat_max, lon_min, lon_m
 
     end_date : str
         Ending date stored as a str
-
-    lat_min : double
-        Minimum value of the latitude stored as a double.
-        
-    lat_max : double
-        Maximum value of the latitude stored as a double.
-        
-    lon_min : double
-        Minimum value of the longitude stored as a double.
-        
-    lon_max : double
-        Maximum value of the longitude stored as a double.
 
     Returns
     -------
@@ -409,11 +317,11 @@ def update_overdoses_text(start_date, end_date, lat_min, lat_max, lon_min, lon_m
     start_date = dt.datetime.strptime(start_date.split('T')[0], '%Y-%m-%d')  # Convert strings to datetime objects
     end_date = dt.datetime.strptime(end_date.split('T')[0], '%Y-%m-%d')
 
-    dff = filter_dataframe(df, start_date, end_date, lat_min, lat_max, lon_min, lon_max)
+    dff = filter_dataframe(df, start_date, end_date)
 
     print('update_overdoses_text:', (dt.datetime.now()-start_time).total_seconds())
 
-    return "{:n}".format(dff.shape[0]) + " / " + "{:n}".format(406566)
+    return "{:n}".format(dff.shape[0])
 
 
 # Selectors -> count graph
@@ -423,13 +331,9 @@ def update_overdoses_text(start_date, end_date, lat_min, lat_max, lon_min, lon_m
     [
         Input("date_picker_range", "start_date"),
         Input("date_picker_range", "end_date"),
-        Input("lat_min", "value"),
-        Input("lat_max", "value"),
-        Input("lon_min", "value"),
-        Input("lon_max", "value"),
     ],
 )
-def make_count_figure(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
+def make_count_figure(start_date, end_date):
     """Create and update the histogram of selected iongograms over the given time range.
 
     Parameters
@@ -440,17 +344,6 @@ def make_count_figure(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
     end_date : str
         Ending date stored as a str
 
-    lat_min : double
-        Minimum value of the latitude stored as a double.
-        
-    lat_max : double
-        Maximum value of the latitude stored as a double.
-        
-    lon_min : double
-        Minimum value of the longitude stored as a double.
-        
-    lon_max : double
-        Maximum value of the longitude stored as a double.
 
     Returns
     -------
@@ -465,7 +358,7 @@ def make_count_figure(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
 
     layout_count = copy.deepcopy(layout)
 
-    dff = filter_dataframe(df, start_date, end_date, lat_min, lat_max, lon_min, lon_max)
+    dff = filter_dataframe(df, start_date, end_date)
     g = dff[["id", "timestamp"]]
     g.index = g["timestamp"]
     g = g.resample("M").count()
@@ -510,13 +403,9 @@ def make_count_figure(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
     [
         Input("date_picker_range", "start_date"),
         Input("date_picker_range", "end_date"),
-        Input("lat_min", "value"),
-        Input("lat_max", "value"),
-        Input("lon_min", "value"),
-        Input("lon_max", "value"),
     ],
 )
-def generate_geo_map(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
+def generate_geo_map(start_date, end_date):
     """Create and update the map of selected overdoses.
 
     Parameters
@@ -526,18 +415,6 @@ def generate_geo_map(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
 
     end_date : str
         Ending date stored as a str
-
-    lat_min : double
-        Minimum value of the latitude stored as a double.
-        
-    lat_max : double
-        Maximum value of the latitude stored as a double.
-        
-    lon_min : double
-        Minimum value of the longitude stored as a double.
-        
-    lon_max : double
-        Maximum value of the longitude stored as a double.
 
     Returns
     -------
@@ -550,7 +427,7 @@ def generate_geo_map(start_date, end_date, lat_min, lat_max, lon_min, lon_max):
     start_date = dt.datetime.strptime(start_date.split('T')[0], '%Y-%m-%d')  # Convert strings to datetime objects
     end_date = dt.datetime.strptime(end_date.split('T')[0], '%Y-%m-%d')
 
-    filtered_data = filter_dataframe(df, start_date, end_date, lat_min, lat_max, lon_min, lon_max)
+    filtered_data = filter_dataframe(df, start_date, end_date)
     dff = filtered_data
 
     traces = []
