@@ -35,15 +35,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -53,6 +44,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   DateTime selectedDate = DateTime.now();
   String selectedLocation = "";
+  String comment = "";
   bool naloxoneAdmin;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -66,13 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
         selectedDate = picked;
       });
   }
-
-  Completer<GoogleMapController> _controller = Completer();
-
-  static final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Column(children: [
+      body: ListView(children: [
         Container(
           padding: const EdgeInsets.only(top: 16, right: 16, left: 16),
           child: Text(
@@ -104,10 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
             style: TextStyle(fontSize: 16.0),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(0),
+        Container(
+          margin: const EdgeInsets.only(left: 16, right: 16),
           child: Button(
-            callback: () => log('Scan button pressed'),
+            callback: () => Navigator.push(context,
+                new MaterialPageRoute(builder: (ctxt) => new ACRScreen())),
             title: "Scan ACR Report",
           ),
         ),
@@ -118,7 +104,10 @@ class _MyHomePageState extends State<MyHomePage> {
           indent: 10,
           endIndent: 10,
         ),
-        Text("Date of overdose", style: TextStyle(fontSize: 15.0)),
+        Container(
+          margin: const EdgeInsets.only(left: 16, right: 16),
+          child: Text("Date of overdose", style: TextStyle(fontSize: 15.0)),
+        ),
         GestureDetector(
             onTap: () {
               _selectDate(context);
@@ -136,10 +125,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     textAlign: TextAlign.center,
                   ),
                 ))),
-        Text("Location of overdose", style: TextStyle(fontSize: 15.0)),
+        Container(
+          margin: const EdgeInsets.only(left: 16, right: 16),
+          child: Text("Location of overdose", style: TextStyle(fontSize: 15.0)),
+        ),
         GestureDetector(
             onTap: () {
-              _selectDate(context);
+              Navigator.push(context,
+                  new MaterialPageRoute(builder: (ctxt) => new MapsScreen()));
             },
             child: Container(
                 margin: const EdgeInsets.all(10),
@@ -154,45 +147,61 @@ class _MyHomePageState extends State<MyHomePage> {
                     textAlign: TextAlign.center,
                   ),
                 ))),
-        // Container(
-        //   height: 150,
-        //   child: GoogleMap(
-        //     mapType: MapType.hybrid,
-        //     initialCameraPosition: _kGooglePlex,
-        //     onMapCreated: (GoogleMapController controller) {
-        //       _controller.complete(controller);
-        //     },
-        //   ),
-        // ),
-
         Container(
-          margin: const EdgeInsets.only(top: 0),
+          margin: const EdgeInsets.only(left: 16, right: 16),
           child: Text("Was Naloxone administered?",
               style: TextStyle(fontSize: 15.0)),
         ),
-        ListTile(
-          // contentPadding: const EdgeInsets.only(top: 0, bottom: 0),
-          title: const Text('Yes'),
-          leading: Radio(
-            value: true,
-            groupValue: naloxoneAdmin,
-            onChanged: (bool value) {
-              setState(() {
-                naloxoneAdmin = value;
-              });
-            },
-          ),
+        Column(
+          children: <Widget>[
+            Container(
+                padding: const EdgeInsets.all(0),
+                child: ListTile(
+                  // contentPadding: const EdgeInsets.only(top: 0, bottom: 0),
+                  title: const Text('Yes'),
+                  leading: Radio(
+                    value: true,
+                    activeColor: Color(0xff6200EE),
+                    groupValue: naloxoneAdmin,
+                    onChanged: (bool value) {
+                      setState(() {
+                        naloxoneAdmin = value;
+                      });
+                    },
+                  ),
+                )),
+            Container(
+                padding: const EdgeInsets.all(0),
+                child: ListTile(
+                  title: const Text('No'),
+                  leading: Radio(
+                    value: false,
+                    activeColor: Color(0xff6200EE),
+                    groupValue: naloxoneAdmin,
+                    onChanged: (bool value) {
+                      setState(() {
+                        naloxoneAdmin = value;
+                      });
+                    },
+                  ),
+                )),
+          ],
         ),
-        ListTile(
-          // contentPadding: const EdgeInsets.all(0),
-          title: const Text('No'),
-          leading: Radio(
-            value: false,
-            groupValue: naloxoneAdmin,
-            onChanged: (bool value) {
-              setState(() {
-                naloxoneAdmin = value;
-              });
+        Container(
+          margin: const EdgeInsets.only(left: 16, right: 16),
+          child: Text("Comments", style: TextStyle(fontSize: 15.0)),
+        ),
+        Container(
+          margin: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              border: Border.all(width: 1, color: Colors.grey),
+              borderRadius: BorderRadius.all(Radius.circular(5.0))),
+          child: TextField(
+            decoration: new InputDecoration.collapsed(hintText: ''),
+            onSubmitted: (String value) {
+              comment = value;
+              log(comment);
             },
           ),
         ),
@@ -204,6 +213,43 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ]), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class ACRScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text("Scan ACR Report"),
+      ),
+      body: new Text("Scan"),
+    );
+  }
+}
+
+class MapsScreen extends StatelessWidget {
+  static final CameraPosition defaultLoc = CameraPosition(
+    target: LatLng(43.4643, 80.5204),
+    zoom: 14.4746,
+  );
+
+  final Completer<GoogleMapController> _controller = Completer();
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        title: new Text("Select Overdose Location"),
+      ),
+      body: GoogleMap(
+        mapType: MapType.hybrid,
+        initialCameraPosition: defaultLoc,
+        onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+        },
+      ),
     );
   }
 }
