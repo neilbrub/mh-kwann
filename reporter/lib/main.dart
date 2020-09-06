@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
           // primarySwatch: Colors.grey,
           primaryColor: Color(0xff878787)),
       home: MyHomePage(title: 'Overdose Incident Form'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
