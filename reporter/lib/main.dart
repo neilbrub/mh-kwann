@@ -8,6 +8,10 @@ import 'dart:async';
 
 import 'common/button.dart';
 
+import 'package:camera/camera.dart';
+import 'package:reporter/scan.dart';
+
+
 void main() {
   runApp(MyApp());
 }
@@ -31,6 +35,7 @@ class MyApp extends StatelessWidget {
           // primarySwatch: Colors.grey,
           primaryColor: Color(0xff878787)),
       home: MyHomePage(title: 'Overdose Incident Form'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -50,6 +55,9 @@ class _MyHomePageState extends State<MyHomePage> {
   LatLng selectedLocation = new LatLng(43.4643, -80.5204);
   String comment = "";
   bool naloxoneAdmin;
+  final commentController = TextEditingController();
+
+  CameraDescription firstCamera;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -70,6 +78,19 @@ class _MyHomePageState extends State<MyHomePage> {
       selectedLocationString =
           json.decode(res.body)['results'][0]['formatted_address'].toString();
     });
+  }
+
+  Future<void> _getCamera(BuildContext context) async {
+    final cameras = await availableCameras();
+    setState(() {
+      firstCamera = cameras.first;
+    });
+  }
+
+  @override
+  dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -105,8 +126,22 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           margin: const EdgeInsets.only(left: 16, right: 16),
           child: Button(
-            callback: () => Navigator.push(context,
-                new MaterialPageRoute(builder: (ctxt) => new ACRScreen())),
+            callback:() {
+              _getCamera(context);
+              Navigator.push(
+                context,
+                new MaterialPageRoute(builder: (ctxt) => new TakePictureScreen(
+                  camera: firstCamera,
+                  updateForm: (nalxUsed, remark) {
+                    commentController.text = remark;
+                    setState(() {
+                      // comment = remark;
+                      naloxoneAdmin = nalxUsed;
+                    });
+                  }
+                ))
+              );
+            },
             title: "Scan ACR Report",
           ),
         ),
@@ -209,6 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
               border: Border.all(width: 1, color: Colors.grey),
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           child: TextField(
+            controller: commentController,
             decoration: new InputDecoration.collapsed(hintText: ''),
             cursorColor: Color(0xff6200EE),
             onSubmitted: (String value) {
@@ -230,17 +266,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class ACRScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Scan ACR Report"),
-      ),
-      body: new Text("Scan"),
-    );
-  }
-}
 
 class MapsScreen extends StatelessWidget {
   final LatLng loc;

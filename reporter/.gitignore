@@ -9,6 +9,8 @@
 .history
 .svn/
 
+credentials.json
+
 # IntelliJ related
 *.iml
 *.ipr
