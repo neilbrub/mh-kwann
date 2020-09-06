@@ -43,7 +43,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   DateTime selectedDate = DateTime.now();
-  String selectedLocation = "";
+  String selectedLocationString = "";
+  LatLng selectedLocation = new LatLng(43.4643, -80.5204);
   String comment = "";
   bool naloxoneAdmin;
 
@@ -131,8 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         GestureDetector(
             onTap: () {
-              Navigator.push(context,
-                  new MaterialPageRoute(builder: (ctxt) => new MapsScreen()));
+              Navigator.push(
+                  context,
+                  new MaterialPageRoute(
+                      builder: (ctxt) =>
+                          new MapsScreen(loc: selectedLocation)));
             },
             child: Container(
                 margin: const EdgeInsets.all(10),
@@ -142,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     borderRadius: BorderRadius.all(Radius.circular(5.0))),
                 child: new Center(
                   child: new Text(
-                    selectedLocation,
+                    selectedLocationString,
                     style: TextStyle(fontSize: 18, color: Colors.black),
                     textAlign: TextAlign.center,
                   ),
@@ -232,12 +236,11 @@ class ACRScreen extends StatelessWidget {
 }
 
 class MapsScreen extends StatelessWidget {
-  static final CameraPosition defaultLoc = CameraPosition(
-    target: LatLng(43.4643, -80.5204),
-    zoom: 14.4746,
-  );
+  final LatLng loc;
 
   final Completer<GoogleMapController> _controller = Completer();
+
+  MapsScreen({Key key, @required this.loc}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +250,11 @@ class MapsScreen extends StatelessWidget {
       ),
       body: GoogleMap(
         mapType: MapType.hybrid,
-        initialCameraPosition: defaultLoc,
+        initialCameraPosition: new CameraPosition(target: loc, zoom: 15),
+        onTap: (LatLng loc) {
+          log(loc.toString());
+          Navigator.pop(context);
+        },
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
