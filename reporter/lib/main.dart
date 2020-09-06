@@ -199,6 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           child: TextField(
             decoration: new InputDecoration.collapsed(hintText: ''),
+            cursorColor: Color(0xff6200EE),
             onSubmitted: (String value) {
               comment = value;
               log(comment);
