@@ -208,7 +208,8 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           margin: const EdgeInsets.all(16),
           child: Button(
-            callback: () => log('Submit Form Pressed'),
+            callback: () => Navigator.push(context,
+                new MaterialPageRoute(builder: (ctxt) => new SubmitScreen())),
             title: "Submit Form",
           ),
         ),
@@ -231,7 +232,7 @@ class ACRScreen extends StatelessWidget {
 
 class MapsScreen extends StatelessWidget {
   static final CameraPosition defaultLoc = CameraPosition(
-    target: LatLng(43.4643, 80.5204),
+    target: LatLng(43.4643, -80.5204),
     zoom: 14.4746,
   );
 
@@ -251,5 +252,33 @@ class MapsScreen extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class SubmitScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+        appBar: new AppBar(
+          title: new Text(""),
+        ),
+        body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Container(
+            alignment: Alignment.topCenter,
+            padding: const EdgeInsets.only(top: 50, right: 16, left: 16),
+            child: Text(
+              'Your form has been submitted.',
+              style: TextStyle(fontSize: 16.0),
+            ),
+          ),
+          Container(
+            alignment: Alignment.topCenter,
+            padding: const EdgeInsets.only(top: 200),
+            child: Button(
+              callback: () => Navigator.pop(context),
+              title: "Submit new report",
+            ),
+          ),
+        ]));
   }
 }
