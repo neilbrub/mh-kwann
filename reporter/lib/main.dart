@@ -11,46 +11,10 @@ import 'common/button.dart';
 import 'package:camera/camera.dart';
 import 'package:reporter/scan.dart';
 
-Future<void> main() async {
-  // Ensure that plugin services are initialized so that `availableCameras()`
-  // can be called before `runApp()`
-  WidgetsFlutterBinding.ensureInitialized();
 
-  // Obtain a list of the available cameras on the device.
-  final cameras = await availableCameras();
-
-  // Get a specific camera from the list of available cameras.
-  final firstCamera = cameras.first;
-
-  runApp(
-    MaterialApp(
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-        // This makes the visual density adapt to the platform that you run
-        // the app on. For desktop platforms, the controls will be smaller and
-        // closer together (more dense) than on mobile platforms.
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: TakePictureScreen(
-        // Pass the appropriate camera to the TakePictureScreen widget.
-        camera: firstCamera,
-      ),
-    ),
-  );
+void main() {
+  runApp(MyApp());
 }
-
-// void main() {
-//   runApp(MyApp());
-// }
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -90,6 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
   LatLng selectedLocation = new LatLng(43.4643, -80.5204);
   String comment = "";
   bool naloxoneAdmin;
+  final commentController = TextEditingController();
+
+  CameraDescription firstCamera;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -110,6 +77,19 @@ class _MyHomePageState extends State<MyHomePage> {
       selectedLocationString =
           json.decode(res.body)['results'][0]['formatted_address'].toString();
     });
+  }
+
+  Future<void> _getCamera(BuildContext context) async {
+    final cameras = await availableCameras();
+    setState(() {
+      firstCamera = cameras.first;
+    });
+  }
+
+  @override
+  dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -145,8 +125,22 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           margin: const EdgeInsets.only(left: 16, right: 16),
           child: Button(
-            callback: () => Navigator.push(context,
-                new MaterialPageRoute(builder: (ctxt) => new ACRScreen())),
+            callback:() {
+              _getCamera(context);
+              Navigator.push(
+                context,
+                new MaterialPageRoute(builder: (ctxt) => new TakePictureScreen(
+                  camera: firstCamera,
+                  updateForm: (nalxUsed, remark) {
+                    commentController.text = remark;
+                    setState(() {
+                      // comment = remark;
+                      naloxoneAdmin = nalxUsed;
+                    });
+                  }
+                ))
+              );
+            },
             title: "Scan ACR Report",
           ),
         ),
@@ -249,6 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
               border: Border.all(width: 1, color: Colors.grey),
               borderRadius: BorderRadius.all(Radius.circular(5.0))),
           child: TextField(
+            controller: commentController,
             decoration: new InputDecoration.collapsed(hintText: ''),
             cursorColor: Color(0xff6200EE),
             onSubmitted: (String value) {
@@ -270,17 +265,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class ACRScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text("Scan ACR Report"),
-      ),
-      body: new Text("Scan"),
-    );
-  }
-}
 
 class MapsScreen extends StatelessWidget {
   final LatLng loc;

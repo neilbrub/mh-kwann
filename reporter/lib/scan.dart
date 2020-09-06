@@ -13,10 +13,12 @@ import 'package:googleapis/vision/v1.dart' as Vision;
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
   final CameraDescription camera;
+  final Function(bool, String) updateForm;
 
   const TakePictureScreen({
     Key key,
     @required this.camera,
+    this.updateForm
   }) : super(key: key);
 
   @override
@@ -95,7 +97,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => DisplayPictureScreen(imagePath: path),
+                builder: (context) => DisplayPictureScreen(imagePath: path, callback: widget.updateForm),
               ),
             );
           } catch (e) {
@@ -111,8 +113,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 // A widget that displays the picture taken by the user.
 class DisplayPictureScreen extends StatelessWidget {
   final String imagePath;
+  final Function(bool, String) callback;
 
-  const DisplayPictureScreen({Key key, this.imagePath}) : super(key: key);
+  const DisplayPictureScreen({Key key, this.imagePath, this.callback}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +169,9 @@ class DisplayPictureScreen extends StatelessWidget {
             // For now, if remark exists assume it refers to Naloxone administration
             if (remark != "") naloxoneAdministeredFlag = true;
 
-            // TODO: Navigate to Form View, passing {naloxoneAdministeredFlag, remark}
+            callback(naloxoneAdministeredFlag, remark);
+            Navigator.pop(context);
+            Navigator.pop(context);
 
           } catch (e) {
             print(e);
