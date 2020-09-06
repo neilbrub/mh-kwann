@@ -11,10 +11,15 @@ const FetchApp = express();
 
 // Routes
 ReportApp.post('/', (req, res) => {
-  let msg = req.body['message'];
+  let report = {
+    location: req.body['location'],
+    timestamp: req.body['time'],
+    naloxoneAdministered: req.body['naloxone'],
+    comments: req.body['comments']
+  }
 
-  admin.firestore().collection('messages').add({original: msg});
-  res.json({result: `Message ${msg} added to Firestore.`});
+  admin.firestore().collection('reports').add({original: report});
+  res.json({result: `report for ${report.timestamp} added to Firestore.`});
 });
 
 

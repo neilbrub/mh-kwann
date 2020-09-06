@@ -3,14 +3,14 @@ MedHacks 2020 - Enabling Physicians to improve opioid response plans through agg
 
 ### What's goin on here?
 ```
-    Firestore
-     ^    |
-     |    v
- Cloud functions
-     ^    |
-  report fetch
-     |    v
- Client (Flutter)
+   {Firestore}
+      ^    |
+      |    v
+ {Cloud functions}
+      ^    |
+   report fetch
+      |    v
+ {Client (Flutter)}
 ```
 
 ### Dev Setup
